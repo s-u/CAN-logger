@@ -1,3 +1,10 @@
+// CAN bus logger, intended for OBD-II CAM Arduino Shields
+// (such as the one from Sparkfun) for standard 500kbps car CAN bus
+//
+// (C)2016 Simon Urbanek, all rights reserved.
+// License: BSD
+//
+
 #include <defaults.h>
 #include <global.h>
 #include <mcp2515.h>
@@ -6,9 +13,11 @@
 #include <SPI.h>
 #include <SD.h>
 
-#define CANSPEED_125    7               // CAN speed at 125 kbps                                                                                       
-#define CANSPEED_250    3               // CAN speed at 250 kbps                                                                                       
-#define CANSPEED_500    1               // CAN speed at 500 kbps                                                                                       
+// NOTE: you will need a modified version of mcp2515.c that supports mode
+//       and has speed fixes!
+
+// The dumps are written in binary form to the SD card with a 32-bit timestamp
+// prefix followed by the CAM structure (pid, flags, data[8]).
 
 const int SD_chipSelect = 9;
 
@@ -42,7 +51,11 @@ void setup() {
   Serial.println();
 
   Serial.print("CAN Init ... ");
-  if (mcp2515_init(CANSPEED_500, 3)) // 0 = normal, 3 = read-only
+
+  // I don't feel comfortable using write mode on my car as I don't want
+  // to brick it or cause accidents, so make sure the MCP2515 is in
+  // read-only mode
+  if (mcp2515_init(0, 3)) // speed: 0 = 500k, mode: 0 = normal, 3 = read-only
      Serial.println("OK");
   else {
      Serial.println("FAILED");
@@ -56,6 +69,7 @@ typedef struct {
   tCAN msg;
 } log_entry_t;
 
+// log entry size
 #define LEB_SIZE 32
 static log_entry_t le_buf[LEB_SIZE];
 static uint8_t le_pos = 0;
