@@ -56,9 +56,11 @@ int main(int ac, char **av) {
     struct msghdr msg;
     struct cmsghdr *cmsg;
     char *ifname = "can0";
+    char *prefix = "/candump/candump-";
     __u32 last_drcnt = 0;
 
-    if (ac > 1) ifname = av[0];
+    if (ac > 1) ifname = av[1];
+    if (ac > 2) prefix = av[2];
     
     if (time(&currtime) == (time_t)-1) {
 	perror("ERROR: time() failed");
@@ -67,7 +69,7 @@ int main(int ac, char **av) {
     
     localtime_r(&currtime, &now);
     
-    sprintf(fname, "/candump/candump-%04d-%02d-%02d_%02d%02d%02d.bin",
+    sprintf(fname, "%s%04d-%02d-%02d_%02d%02d%02d.bin", prefix,
 	    now.tm_year + 1900,
 	    now.tm_mon + 1,
 	    now.tm_mday,
